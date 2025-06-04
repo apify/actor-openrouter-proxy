@@ -48,6 +48,9 @@ server.register(FastifyProxy, {
                 try {
                     const json = JSON.parse(data); // Parse the JSON response
                     request.log.info(`Cost ${json.usage.cost}`);
+                    triggerPricing(json.usage.cost)
+                        // We are not waiting for result, data are already send
+                        .catch(console.error);
                 } catch (err) {
                     console.error('Error parsing JSON:', err);
                 }
@@ -58,6 +61,18 @@ server.register(FastifyProxy, {
         },
     },
 });
+
+async function triggerPricing(amount: number) {
+    // const allowedAmounts = [
+    //     0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.02, 0.03, 0.04, 0.05, 0.1,
+    // ];
+    // const closestAmount = allowedAmounts.reduce((prev, curr) => {
+    //     return Math.abs(curr - amount) < Math.abs(prev - amount) ? curr : prev;
+    // });
+    const count = Math.max(Math.round(amount / 0.001), 1);
+    console.log(`Charging $${amount}, by charge $0.001 x ${count} times`);
+    await Actor.charge({ eventName: 'credit-0-001', count });
+}
 
 process.on('SIGTERM', async () => {
     console.log('Received SIGTERM, shutting down gracefully');
