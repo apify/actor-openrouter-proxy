@@ -34,6 +34,29 @@ server.register(FastifyProxy, {
             (request.body as Record<string, unknown>).usage = { include: true };
         }
     },
+    proxyPayloads: false, // Disable proxy payload, request body will be decoded and modified by preHandler
+    replyOptions: {
+        onResponse: (request, reply, res) => {
+            // @ts-expect-error stream is not defined in the type definitions
+            const stream = res.stream as NodeJS.ReadableStream;
+
+            let data = '';
+            stream.on('data', (chunk) => {
+                data += chunk;
+            });
+            stream.on('end', () => {
+                try {
+                    const json = JSON.parse(data); // Parse the JSON response
+                    request.log.info(`Cost ${json.usage.cost}`);
+                } catch (err) {
+                    console.error('Error parsing JSON:', err);
+                }
+            });
+
+            // Direct stream to the reply, don't wait for JSON parse
+            reply.send(stream);
+        },
+    },
 });
 
 process.on('SIGTERM', async () => {
