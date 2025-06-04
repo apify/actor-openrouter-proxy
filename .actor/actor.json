@@ -1,13 +1,16 @@
 {
-	"actorSpecification": 1,
-	"name": "actor-openrouter-proxy",
-	"title": "Standby Actor in TypeScript",
-	"description": "Standby Actor in TypeScript.",
-	"version": "0.0",
-	"buildTag": "latest",
-	"usesStandbyMode": true,
-	"meta": {
-		"templateId": "ts-standby"
-	},
-	"dockerfile": "../Dockerfile"
+    "actorSpecification": 1,
+    "name": "actor-openrouter-proxy",
+    "title": "Standby Actor in TypeScript",
+    "description": "Standby Actor in TypeScript.",
+    "version": "0.0",
+    "buildTag": "latest",
+    "usesStandbyMode": true,
+    "meta": {
+        "templateId": "ts-standby"
+    },
+    "dockerfile": "../Dockerfile",
+    "environmentVariables": {
+        "OPENROUTER_KEY": "@openRouterKey"
+    }
 }
