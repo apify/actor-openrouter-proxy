@@ -86,4 +86,4 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
-await server.listen({ port: 8080 });
+await server.listen({ port: Actor.config.get('standbyPort'), host: '0.0.0.0' });
