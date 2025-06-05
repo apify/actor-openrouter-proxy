@@ -1,3 +1,6 @@
+import { PassThrough } from 'node:stream';
+import { text } from 'node:stream/consumers';
+
 import FastifyProxy from '@fastify/http-proxy';
 import { Actor } from 'apify';
 import Fastify from 'fastify';
@@ -40,24 +43,21 @@ server.register(FastifyProxy, {
             // @ts-expect-error stream is not defined in the type definitions
             const stream = res.stream as NodeJS.ReadableStream;
 
-            let data = '';
-            stream.on('data', (chunk) => {
-                data += chunk;
-            });
-            stream.on('end', () => {
-                try {
-                    const json = JSON.parse(data); // Parse the JSON response
-                    request.log.info(`Cost ${json.usage.cost}`);
-                    triggerPricing(json.usage.cost)
-                        // We are not waiting for result, data are already send
-                        .catch(console.error);
-                } catch (err) {
-                    console.error('Error parsing JSON:', err);
-                }
-            });
+            const streamClone = new PassThrough()
+            stream.pipe(streamClone);
 
             // Direct stream to the reply, don't wait for JSON parse
             reply.send(stream);
+
+            // Wait for end of stream and read as text
+            text(streamClone).then(async (textResponse) => {
+                // console.log('Response text:', textResponse);
+
+                const json = JSON.parse(textResponse); // Parse the JSON response
+                request.log.info(`Cost ${json.usage.cost}`);
+
+                return triggerPricing(json.usage.cost)
+            }).catch(console.error);
         },
     },
 });
