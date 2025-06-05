@@ -31,6 +31,7 @@ server.register(FastifyProxy, {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     preHandler: async (request) => {
         request.headers.authorization = `Bearer ${OPENROUTER_KEY}`;
+        request.headers['accept-encoding'] = 'identity'; // Disable content-encoding
 
         if (typeof request.body === 'object' && request.body !== null) {
             // Force request for usage data to calculate prices
