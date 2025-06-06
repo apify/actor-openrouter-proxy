@@ -52,24 +52,27 @@ server.register(FastifyProxy, {
 
             // Wait for end of stream and read as text
             text(streamClone).then(async (textResponse) => {
-                // console.log('Response text:', textResponse);
-
-                const json = JSON.parse(textResponse); // Parse the JSON response
-                request.log.info(`Cost ${json.usage.cost}`);
-
-                return triggerPricing(json.usage.cost)
+                let cost = 0;
+                // Response is stream
+                if(textResponse.startsWith('data:') || textResponse.startsWith(': OPENROUTER PROCESSING')) {
+                    request.log.info(`Stream response mode`);
+                    const lines = textResponse.split('\n').filter(line => line.trim() !== '');
+                    const lineWithData = lines[lines.length - 2];
+                    const data = JSON.parse(lineWithData.replace('data: ', ''));
+                    cost = data.usage?.cost || 0;
+                } else {
+                    request.log.info(`Single response mode`);
+                    const json = JSON.parse(textResponse); // Parse the JSON response
+                    request.log.info(`Cost ${json.usage.cost}`);
+                    cost = json.usage?.cost || 0;
+                }
+                return triggerPricing(cost)
             }).catch(console.error);
         },
     },
 });
 
 async function triggerPricing(amount: number) {
-    // const allowedAmounts = [
-    //     0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.02, 0.03, 0.04, 0.05, 0.1,
-    // ];
-    // const closestAmount = allowedAmounts.reduce((prev, curr) => {
-    //     return Math.abs(curr - amount) < Math.abs(prev - amount) ? curr : prev;
-    // });
     const count = Math.max(Math.round(amount / 0.001), 1);
     console.log(`Charging $${amount}, by charge $0.001 x ${count} times`);
     await Actor.charge({ eventName: 'credit-0-001', count });
