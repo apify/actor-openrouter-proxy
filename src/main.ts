@@ -7,6 +7,10 @@ import Fastify from 'fastify';
 
 await Actor.init();
 
+if(Actor.config.get('metaOrigin') !== 'STANDBY') {
+    await Actor.exit('This actor is intended to run in standby mode only.');
+}
+
 const OPENROUTER_KEY = process.env.OPENROUTER_KEY || '';
 if (!OPENROUTER_KEY) {
     await Actor.exit('OPENROUTER_KEY environment variable is not set. Please set it to your OpenRouter API key.');

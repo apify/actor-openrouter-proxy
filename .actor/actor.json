@@ -12,5 +12,13 @@
     "dockerfile": "../Dockerfile",
     "environmentVariables": {
         "OPENROUTER_KEY": "@openRouterKey"
+    },
+    "input": {
+        "title": "Proxy OpenRouter",
+        "description": "",
+        "type": "object",
+        "schemaVersion": 1,
+        "properties": {},
+        "required": []
     }
 }
