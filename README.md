@@ -1,54 +1,38 @@
-## Standby TypeScript template
+## Open Router Proxy
 
-Start a new [web scraping](https://apify.com/web-scraping) project quickly and easily in TypeScript (Node.js) with our Standby project template. It provides a basic structure for building an Actor with [Apify SDK](https://docs.apify.com/sdk/js/) and allows you to easily add your own functionality.
+This actor creates a proxy for the Open Router API.
 
-## Included features
+Requests will be charged to your account. Pricing is the same as Open Router prices.
 
-- **[Apify SDK](https://docs.apify.com/sdk/js/)** - a toolkit for building [Actors](https://apify.com/actors)
+Supports both streaming and non-streaming responses.
 
-## Resources
+## Usage
+Use the same code as in Open Router: https://openrouter.ai/docs/quickstart#using-the-openai-sdk
 
-- [Actor Standby documentation](https://docs.apify.com/platform/actors/development/programming-interface/standby)
+```javascript
+import OpenAI from 'openai';
 
+const openai = new OpenAI({
+  baseURL: 'https://michal-kalita--actor-openrouter-proxy.apify.actor/api/v1',
+  apiKey: 'placeholder', // don't use a real key here, but a key is required and cannot be an empty string
+  defaultHeaders: {
+    Authorization: `Bearer ${process.env.APIFY_TOKEN || ''}`, // token is loaded automatically in runtime
+  },
+});
 
-## Getting started
+async function main() {
+  const completion = await openai.chat.completions.create({
+    model: 'openai/gpt-4o',
+    messages: [
+      {
+        role: 'user',
+        content: 'What is the meaning of life?',
+      },
+    ],
+  });
 
-For complete information [see this article](https://docs.apify.com/platform/actors/development#build-actor-locally). To run the Actor use the following command:
+  console.log(completion.choices[0].message);
+}
 
-```bash
-apify run
+main();
 ```
-
-## Deploy to Apify
-
-### Connect Git repository to Apify
-
-If you've created a Git repository for the project, you can easily connect to Apify:
-
-1. Go to [Actor creation page](https://console.apify.com/actors/new)
-2. Click on **Link Git Repository** button
-
-### Push project on your local machine to Apify
-
-You can also deploy the project on your local machine to Apify without the need for the Git repository.
-
-1. Log in to Apify. You will need to provide your [Apify API Token](https://console.apify.com/account/integrations) to complete this action.
-
-    ```bash
-    apify login
-    ```
-
-2. Deploy your Actor. This command will deploy and build the Actor on the Apify Platform. You can find your newly created Actor under [Actors -> My Actors](https://console.apify.com/actors?tab=my).
-
-    ```bash
-    apify push
-    ```
-
-## Documentation reference
-
-To learn more about Apify and Actors, take a look at the following resources:
-
-- [Apify SDK for JavaScript documentation](https://docs.apify.com/sdk/js)
-- [Apify SDK for Python documentation](https://docs.apify.com/sdk/python)
-- [Apify Platform documentation](https://docs.apify.com/platform)
-- [Join our developer community on Discord](https://discord.com/invite/jyEM2PRvMU)
