@@ -7,16 +7,19 @@ Requests will be charged to your account. Pricing is the same as Open Router pri
 Supports both streaming and non-streaming responses.
 
 ## Usage
-Use the same code as in Open Router: https://openrouter.ai/docs/quickstart#using-the-openai-sdk
+
+Install the `openai` package: `npm install openai`.
+
+Then use the following code to make requests to the Open Router API:
 
 ```javascript
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
   baseURL: 'https://michal-kalita--actor-openrouter-proxy.apify.actor/api/v1',
-  apiKey: 'placeholder', // don't use a real key here, but a key is required and cannot be an empty string
+  apiKey: 'no-key-required-but-must-not-be-empty', // Any non-empty string is required here; do NOT use a real API key.
   defaultHeaders: {
-    Authorization: `Bearer ${process.env.APIFY_TOKEN || ''}`, // token is loaded automatically in runtime
+    Authorization: `Bearer ${process.env.APIFY_TOKEN}`, // Apify token is loaded automatically in runtime
   },
 });
 
@@ -34,5 +37,5 @@ async function main() {
   console.log(completion.choices[0].message);
 }
 
-main();
+await main();
 ```

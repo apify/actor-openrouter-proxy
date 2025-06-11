@@ -1,8 +1,8 @@
 {
     "actorSpecification": 1,
     "name": "actor-openrouter-proxy",
-    "title": "Standby Actor in TypeScript",
-    "description": "Standby Actor in TypeScript.",
+    "title": "OpenRouter Proxy",
+    "description": "Proxy with pay per event pricing",
     "version": "0.0",
     "buildTag": "latest",
     "usesStandbyMode": true,
@@ -11,7 +11,7 @@
     },
     "dockerfile": "../Dockerfile",
     "environmentVariables": {
-        "OPENROUTER_KEY": "@openRouterKey"
+        "OPENROUTER_API_KEY": "@openRouterKey"
     },
     "input": {
         "title": "Proxy OpenRouter",

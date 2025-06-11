@@ -7,13 +7,13 @@ import Fastify from 'fastify';
 
 await Actor.init();
 
-if(Actor.config.get('metaOrigin') !== 'STANDBY') {
+if (Actor.config.get('metaOrigin') !== 'STANDBY') {
     await Actor.exit('This actor is intended to run in standby mode only.');
 }
 
-const OPENROUTER_KEY = process.env.OPENROUTER_KEY || '';
-if (!OPENROUTER_KEY) {
-    await Actor.exit('OPENROUTER_KEY environment variable is not set. Please set it to your OpenRouter API key.');
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
+if (!OPENROUTER_API_KEY) {
+    await Actor.exit('OPENROUTER_API_KEY environment variable is not set. Please set it to your OpenRouter API key.');
 }
 
 const server = Fastify({
@@ -24,8 +24,17 @@ server.get('/', async (request, reply) => {
     if (request.headers['x-apify-container-server-readiness-probe']) {
         return reply.status(200).send('ok');
     }
-
-    return reply.status(200).send('Hello from Actor Standby!');
+    return reply.status(200).type('text/html').send(`<!DOCTYPE html>
+<html>
+<head>
+    <title>Open Router proxy Actor</title>
+</head>
+<body>
+    <h1>Open Router proxy Actor</h1>
+    <p>This proxy is usable with <a href="https://github.com/openai/openai-node">OpenAI library</a></p>
+    <p>Read more in <a href="https://apify.com/michal.kalita/actor-openrouter-proxy">Actor description</a></p>
+</body>
+</html>`);
 });
 
 server.register(FastifyProxy, {
@@ -34,7 +43,7 @@ server.register(FastifyProxy, {
     rewritePrefix: '/api',
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     preHandler: async (request) => {
-        request.headers.authorization = `Bearer ${OPENROUTER_KEY}`;
+        request.headers.authorization = `Bearer ${OPENROUTER_API_KEY}`;
         request.headers['accept-encoding'] = 'identity'; // Disable content-encoding
 
         if (typeof request.body === 'object' && request.body !== null) {
@@ -48,35 +57,36 @@ server.register(FastifyProxy, {
             // @ts-expect-error stream is not defined in the type definitions
             const stream = res.stream as NodeJS.ReadableStream;
 
-            const streamClone = new PassThrough()
+            const streamClone = new PassThrough();
             stream.pipe(streamClone);
 
             // Direct stream to the reply, don't wait for JSON parse
             reply.send(stream);
 
             // Wait for end of stream and read as text
-            text(streamClone).then(async (textResponse) => {
-                let cost = 0;
-                // Response is stream
-                if(textResponse.startsWith('data:') || textResponse.startsWith(': OPENROUTER PROCESSING')) {
-                    request.log.info(`Stream response mode`);
-                    const lines = textResponse.split('\n').filter(line => line.trim() !== '');
-                    const lineWithData = lines[lines.length - 2];
-                    const data = JSON.parse(lineWithData.replace('data: ', ''));
-                    cost = data.usage?.cost || 0;
-                } else {
-                    request.log.info(`Single response mode`);
-                    const json = JSON.parse(textResponse); // Parse the JSON response
+            text(streamClone)
+                .then((response) => {
+                    const isStream = response.startsWith('data:') || response.startsWith(': OPENROUTER PROCESSING');
+
+                    if (isStream) {
+                        request.log.info('Stream response mode');
+                        const lines = response.split('\n').filter((line) => line.trim());
+                        const data = JSON.parse(lines[lines.length - 2].replace('data: ', ''));
+                        return data.usage?.cost || 0;
+                    }
+
+                    request.log.info('Single response mode');
+                    const json = JSON.parse(response);
                     request.log.info(`Cost ${json.usage.cost}`);
-                    cost = json.usage?.cost || 0;
-                }
-                return triggerPricing(cost)
-            }).catch(console.error);
+                    return json.usage?.cost || 0;
+                })
+                .then(chargeUser)
+                .catch(console.error);
         },
     },
 });
 
-async function triggerPricing(amount: number) {
+async function chargeUser(amount: number) {
     const count = Math.max(Math.round(amount / 0.001), 1);
     console.log(`Charging $${amount}, by charge $0.001 x ${count} times`);
     await Actor.charge({ eventName: 'credit-0-001', count });
@@ -94,4 +104,5 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
-await server.listen({ port: Actor.config.get('standbyPort'), host: '0.0.0.0' });
+const port = Actor.config.get('standbyPort');
+await server.listen({ port, host: '0.0.0.0' });
