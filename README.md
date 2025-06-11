@@ -1,23 +1,35 @@
-## Open Router Proxy
+# Open Router Proxy
 
-This actor creates a proxy for the Open Router API.
+This Apify Actor creates a proxy for the Open Router API, allowing you to access multiple AI models through a unified OpenAI-compatible interface. All requests are charged to your Apify account on a pay-per-event basis.
 
-Requests will be charged to your account. Pricing is the same as Open Router prices.
+## What This Actor Does
 
-Supports both streaming and non-streaming responses.
+- **Proxy Access**: Routes your API requests to Open Router's extensive collection of AI models
+- **OpenAI Compatibility**: Works seamlessly with the OpenAI SDK and any OpenAI-compatible client
+- **Transparent Billing**: Charges are applied to your Apify account at the same rates as Open Router
+- **Full Feature Support**: Supports both streaming and non-streaming responses
+- **No API Key Management**: Uses your Apify token for authentication - no need to manage separate Open Router API keys
 
-## Usage
+## Pricing
 
-Install the `openai` package: `npm install openai`.
+This actor uses a pay-per-event pricing model through Apify. Each API request counts as one event. The underlying Open Router API costs are included in the per-event pricing, plus a 10% fee to cover the cost of running the proxy server.
 
-Then use the following code to make requests to the Open Router API:
+## Quick Start
+
+### 1. Install the OpenAI Package
+
+```bash
+npm install openai
+```
+
+### 2. Basic Usage
 
 ```javascript
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
   baseURL: 'https://michal-kalita--actor-openrouter-proxy.apify.actor/api/v1',
-  apiKey: 'no-key-required-but-must-not-be-empty', // Any non-empty string is required here; do NOT use a real API key.
+  apiKey: 'no-key-required-but-must-not-be-empty', // Any non-empty string works; do NOT use a real API key.
   defaultHeaders: {
     Authorization: `Bearer ${process.env.APIFY_TOKEN}`, // Apify token is loaded automatically in runtime
   },
@@ -25,7 +37,7 @@ const openai = new OpenAI({
 
 async function main() {
   const completion = await openai.chat.completions.create({
-    model: 'openai/gpt-4o',
+    model: 'openrouter/auto',
     messages: [
       {
         role: 'user',
@@ -39,3 +51,46 @@ async function main() {
 
 await main();
 ```
+
+### 3. Streaming Responses
+
+```javascript
+const stream = await openai.chat.completions.create({
+  model: 'openrouter/auto',
+  messages: [
+    {
+      role: 'user',
+      content: 'Write a short story about a robot.',
+    },
+  ],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+}
+```
+
+## Available Models
+
+This proxy supports all models available through Open Router from providers including:
+- OpenAI
+- Anthropic
+- Google
+- Meta
+- Perplexity
+- And many more...
+
+For a complete list of available models, visit [Open Router's models page](https://openrouter.ai/models).
+
+## Authentication
+
+The actor uses your Apify token for authentication. In Apify Actor environments, `APIFY_TOKEN` is automatically available. For local development, you can:
+
+1. Set the environment variable: `export APIFY_TOKEN=your_token_here`
+2. Or pass it directly in the Authorization header
+3. Find your token in the [Apify Console](https://console.apify.com/account/integrations)
+
+## Support
+
+For issues related to this Actor, please contact the Actor developer.

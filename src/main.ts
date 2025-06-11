@@ -87,9 +87,10 @@ server.register(FastifyProxy, {
 });
 
 async function chargeUser(amount: number) {
-    const count = Math.max(Math.round(amount / 0.001), 1);
-    console.log(`Charging $${amount}, by charge $0.001 x ${count} times`);
-    await Actor.charge({ eventName: 'credit-0-001', count });
+    const chargePrice = amount * 1.1; // Add 10% fee
+    const count = Math.max(Math.round(chargePrice / 0.0001), 1);
+    console.log(`Charging $${chargePrice}, by charge $0.0001 x ${count} times`);
+    await Actor.charge({ eventName: 'credit-0-0001', count });
 }
 
 process.on('SIGTERM', async () => {
