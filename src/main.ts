@@ -8,7 +8,7 @@ import Fastify from 'fastify';
 await Actor.init();
 
 if (Actor.config.get('metaOrigin') !== 'STANDBY') {
-    await Actor.exit('This actor is intended to run in standby mode only.');
+    await Actor.exit('This Actor is intended to run in standby mode only.');
 }
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
