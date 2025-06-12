@@ -32,7 +32,7 @@ server.get('/', async (request, reply) => {
 <body>
     <h1>Open Router proxy Actor</h1>
     <p>This proxy is usable with <a href="https://github.com/openai/openai-node">OpenAI library</a></p>
-    <p>Read more in <a href="https://apify.com/michal.kalita/actor-openrouter-proxy">Actor description</a></p>
+    <p>Read more in <a href="https://apify.com/michal.kalita/openrouter-proxy">Actor description</a></p>
 </body>
 </html>`);
 });
