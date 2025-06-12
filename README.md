@@ -1,54 +1,96 @@
-## Standby TypeScript template
+# OpenRouter Proxy
 
-Start a new [web scraping](https://apify.com/web-scraping) project quickly and easily in TypeScript (Node.js) with our Standby project template. It provides a basic structure for building an Actor with [Apify SDK](https://docs.apify.com/sdk/js/) and allows you to easily add your own functionality.
+This Apify Actor creates a proxy for the Open Router API, allowing you to access multiple AI models through a unified OpenAI-compatible interface. All requests are charged to your Apify account on a pay-per-event basis.
 
-## Included features
+## What this Actor does
 
-- **[Apify SDK](https://docs.apify.com/sdk/js/)** - a toolkit for building [Actors](https://apify.com/actors)
+- **Proxy access**: Routes your API requests to Open Router's extensive collection of AI models
+- **OpenAI compatibility**: Works seamlessly with the OpenAI SDK and any OpenAI-compatible client
+- **Transparent billing**: Charges are applied to your Apify account at the same rates as Open Router
+- **Full feature support**: Supports both streaming and non-streaming responses
+- **No API key management**: Uses your Apify token for authentication - no need to manage separate Open Router API keys
 
-## Resources
+## Pricing
 
-- [Actor Standby documentation](https://docs.apify.com/platform/actors/development/programming-interface/standby)
+This Actor uses a pay-per-event pricing model through Apify. Each API request counts as one event. The underlying Open Router API costs are included in the per-event pricing, plus a 10% fee to cover the cost of running the proxy server.
 
+## Quick start
 
-## Getting started
-
-For complete information [see this article](https://docs.apify.com/platform/actors/development#build-actor-locally). To run the Actor use the following command:
+### 1. Install the OpenAI package
 
 ```bash
-apify run
+npm install openai
 ```
 
-## Deploy to Apify
+### 2. Basic usage
 
-### Connect Git repository to Apify
+```javascript
+import OpenAI from 'openai';
 
-If you've created a Git repository for the project, you can easily connect to Apify:
+const openai = new OpenAI({
+  baseURL: 'https://michal-kalita--openrouter-proxy.apify.actor/api/v1',
+  apiKey: 'no-key-required-but-must-not-be-empty', // Any non-empty string works; do NOT use a real API key.
+  defaultHeaders: {
+    Authorization: `Bearer ${process.env.APIFY_TOKEN}`, // Apify token is loaded automatically in runtime
+  },
+});
 
-1. Go to [Actor creation page](https://console.apify.com/actors/new)
-2. Click on **Link Git Repository** button
+async function main() {
+  const completion = await openai.chat.completions.create({
+    model: 'openrouter/auto',
+    messages: [
+      {
+        role: 'user',
+        content: 'What is the meaning of life?',
+      },
+    ],
+  });
 
-### Push project on your local machine to Apify
+  console.log(completion.choices[0].message);
+}
 
-You can also deploy the project on your local machine to Apify without the need for the Git repository.
+await main();
+```
 
-1. Log in to Apify. You will need to provide your [Apify API Token](https://console.apify.com/account/integrations) to complete this action.
+### 3. Streaming responses
 
-    ```bash
-    apify login
-    ```
+```javascript
+const stream = await openai.chat.completions.create({
+  model: 'openrouter/auto',
+  messages: [
+    {
+      role: 'user',
+      content: 'Write a short story about a robot.',
+    },
+  ],
+  stream: true,
+});
 
-2. Deploy your Actor. This command will deploy and build the Actor on the Apify Platform. You can find your newly created Actor under [Actors -> My Actors](https://console.apify.com/actors?tab=my).
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+}
+```
 
-    ```bash
-    apify push
-    ```
+## Available models
 
-## Documentation reference
+This proxy supports all models available through Open Router from providers including:
+- OpenAI
+- Anthropic
+- Google
+- Meta
+- Perplexity
+- And many more...
 
-To learn more about Apify and Actors, take a look at the following resources:
+For a complete list of available models, visit [Open Router's models page](https://openrouter.ai/models).
 
-- [Apify SDK for JavaScript documentation](https://docs.apify.com/sdk/js)
-- [Apify SDK for Python documentation](https://docs.apify.com/sdk/python)
-- [Apify Platform documentation](https://docs.apify.com/platform)
-- [Join our developer community on Discord](https://discord.com/invite/jyEM2PRvMU)
+## Authentication
+
+The Actor uses your Apify token for authentication. In Apify Actor environments, `APIFY_TOKEN` is automatically available. For local development, you can:
+
+1. Set the environment variable: `export APIFY_TOKEN=your_token_here`
+2. Or pass it directly in the Authorization header
+3. Find your token in the [Apify Console](https://console.apify.com/account/integrations)
+
+## Support
+
+For issues related to this Actor, please contact the Actor developer.
