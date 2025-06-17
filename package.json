@@ -9,7 +9,8 @@
 	"dependencies": {
 		"@fastify/http-proxy": "^11.1.2",
 		"apify": "^3.2.6",
-		"fastify": "^5.3.3"
+		"fastify": "^5.3.3",
+		"pino-pretty": "^13.0.0"
 	},
 	"devDependencies": {
 		"@apify/eslint-config": "^1.0.0",

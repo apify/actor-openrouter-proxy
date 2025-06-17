@@ -4,6 +4,7 @@ import { text } from 'node:stream/consumers';
 import FastifyProxy from '@fastify/http-proxy';
 import { Actor } from 'apify';
 import Fastify from 'fastify';
+import type PinoPretty from 'pino-pretty';
 
 await Actor.init();
 
@@ -17,7 +18,17 @@ if (!OPENROUTER_API_KEY) {
 }
 
 const server = Fastify({
-    logger: true,
+    logger: {
+        transport: {
+            target: 'pino-pretty',
+            options: {
+                colorize: true,
+                minimumLevel: 'debug',
+                ignore: 'hostname,time,pid,reqId',
+                messageFormat: '{if reqId}[{reqId}] {end}{msg}',
+            } as PinoPretty.PrettyOptions,
+        },
+    },
 });
 
 server.get('/', async (request, reply) => {
@@ -53,7 +64,8 @@ server.register(FastifyProxy, {
     },
     proxyPayloads: false, // Disable proxy payload, request body will be decoded and modified by preHandler
     replyOptions: {
-        onResponse: (request, reply, res) => {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onResponse: async (request, reply, res) => {
             // @ts-expect-error stream is not defined in the type definitions
             const stream = res.stream as NodeJS.ReadableStream;
 
@@ -63,35 +75,48 @@ server.register(FastifyProxy, {
             // Direct stream to the reply, don't wait for JSON parse
             reply.send(stream);
 
-            // Wait for end of stream and read as text
-            text(streamClone)
-                .then((response) => {
-                    const isStream = response.startsWith('data:') || response.startsWith(': OPENROUTER PROCESSING');
+            let response;
+            try {
+                // Wait for end of stream and read as text
+                response = await text(streamClone);
+            } catch (error) {
+                request.log.error({ error }, 'Cannot read response');
+                return;
+            }
 
-                    if (isStream) {
-                        request.log.info('Stream response mode');
-                        const lines = response.split('\n').filter((line) => line.trim());
-                        const data = JSON.parse(lines[lines.length - 2].replace('data: ', ''));
-                        return data.usage?.cost || 0;
-                    }
+            let jsonString;
+            const isStream = response.startsWith('data:') || response.startsWith(': OPENROUTER PROCESSING');
+            if (isStream) {
+                request.log.info('Stream response mode');
+                const lines = response.split('\n').filter((line) => line.trim());
+                jsonString = lines[lines.length - 2].replace('data: ', '');
+            } else {
+                jsonString = response;
+            }
 
-                    request.log.info('Single response mode');
-                    const json = JSON.parse(response);
-                    request.log.info(`Cost ${json.usage.cost}`);
-                    return json.usage?.cost || 0;
-                })
-                .then(chargeUser)
-                .catch(console.error);
+            let data;
+            try {
+                data = JSON.parse(jsonString);
+            } catch (error) {
+                request.log.error({ error, jsonString }, 'Failed to parse JSON response');
+                return;
+            }
+
+            // eslint-disable-next-line prefer-destructuring
+            const cost = data.usage.cost;
+            if (!cost) {
+                request.log.error({ data }, 'Cannot read cost from response');
+                return;
+            }
+
+            const costWithFee = cost * 1.1; // Add 10% fee
+            const count = Math.max(Math.round(costWithFee / 0.0001), 1);
+            request.log.info({ originalCost: cost, costWithFee }, `Charging $0.0001 x ${count} times`);
+
+            await Actor.charge({ eventName: 'credit-0-0001', count });
         },
     },
 });
-
-async function chargeUser(amount: number) {
-    const chargePrice = amount * 1.1; // Add 10% fee
-    const count = Math.max(Math.round(chargePrice / 0.0001), 1);
-    console.log(`Charging $${chargePrice}, by charge $0.0001 x ${count} times`);
-    await Actor.charge({ eventName: 'credit-0-0001', count });
-}
 
 process.on('SIGTERM', async () => {
     console.log('Received SIGTERM, shutting down gracefully');
