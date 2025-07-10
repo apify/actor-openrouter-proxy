@@ -9,10 +9,11 @@ This Apify Actor creates a proxy for the Open Router API, allowing you to access
 - **Transparent billing**: Charges are applied to your Apify account at the same rates as Open Router
 - **Full feature support**: Supports both streaming and non-streaming responses
 - **No API key management**: Uses your Apify token for authentication - no need to manage separate Open Router API keys
+- **Standby mode**: Actor runs in standby mode only and has a static URL address, like a standard web server.
 
 ## Pricing
 
-This Actor uses a pay-per-event pricing model through Apify. Each API request counts as one event. The underlying Open Router API costs are included in the per-event pricing, plus a 10% fee to cover the cost of running the proxy server.
+This Actor uses a pay-per-event pricing model through Apify. Each API request counts as one event, and no additional fees are applied beyond the standard Apify event pricing.
 
 ## Quick start
 
@@ -28,7 +29,7 @@ npm install openai
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  baseURL: 'https://michal-kalita--openrouter-proxy.apify.actor/api/v1',
+  baseURL: 'https:/openrouter.apify.actor/api/v1',
   apiKey: 'no-key-required-but-must-not-be-empty', // Any non-empty string works; do NOT use a real API key.
   defaultHeaders: {
     Authorization: `Bearer ${process.env.APIFY_TOKEN}`, // Apify token is loaded automatically in runtime
@@ -74,6 +75,7 @@ for await (const chunk of stream) {
 ## Available models
 
 This proxy supports all models available through Open Router from providers including:
+
 - OpenAI
 - Anthropic
 - Google

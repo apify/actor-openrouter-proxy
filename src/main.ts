@@ -85,7 +85,8 @@ server.register(FastifyProxy, {
             }
 
             let jsonString;
-            const isStream = response.startsWith('data:') || response.startsWith(': OPENROUTER PROCESSING');
+            // Stream must start with 'data:', but it's allowd to send just ":" to keep the connection alive
+            const isStream = response.startsWith('data:') || response.startsWith(':');
             if (isStream) {
                 request.log.info('Stream response mode');
                 const lines = response.split('\n').filter((line) => line.trim());
@@ -109,9 +110,9 @@ server.register(FastifyProxy, {
                 return;
             }
 
-            const costWithFee = cost * 1.1; // Add 10% fee
-            const count = Math.max(Math.round(costWithFee / 0.0001), 1);
-            request.log.info({ originalCost: cost, costWithFee }, `Charging $0.0001 x ${count} times`);
+            // The Apify platform doesn't have a function for dynamic pricing. The price is calculated as a count of $0.0001 charges.
+            const count = Math.max(Math.round(cost / 0.0001), 1);
+            request.log.info({ cost }, `Charging $0.0001 x ${count} times`);
 
             await Actor.charge({ eventName: 'credit-0-0001', count });
         },
