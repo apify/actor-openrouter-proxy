@@ -1,9 +1,9 @@
 {
     "actorSpecification": 1,
-    "name": "actor-openrouter-proxy",
-    "title": "OpenRouter Proxy",
-    "description": "Proxy with pay per event pricing",
-    "version": "0.0",
+    "name": "openrouter",
+    "title": "OpenRouter",
+    "description": "You can use any AI LLM model without accounts in AI providers. Use this Actor as a proxy for all requests. Use pay-per-event pricing to pay only for the real credit used.",
+    "version": "1.0",
     "buildTag": "latest",
     "usesStandbyMode": true,
     "meta": {
