@@ -69,7 +69,6 @@ server.register(FastifyProxy, {
     replyOptions: {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onResponse: async (request, reply, res) => {
-            // @ts-expect-error stream is not defined in the type definitions
             const stream = res.stream as NodeJS.ReadableStream;
 
             const streamClone = new PassThrough();
