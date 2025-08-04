@@ -10,11 +10,13 @@
 		"@fastify/http-proxy": "^11.1.2",
 		"apify": "^3.2.6",
 		"fastify": "^5.3.3",
+		"marked": "^16.1.1",
 		"pino-pretty": "^13.0.0"
 	},
 	"devDependencies": {
 		"@apify/eslint-config": "^1.0.0",
 		"@apify/tsconfig": "^0.1.1",
+		"@types/marked": "^5.0.2",
 		"@types/node": "^22.15.21",
 		"eslint": "^9.27.0",
 		"eslint-config-prettier": "^10.1.5",

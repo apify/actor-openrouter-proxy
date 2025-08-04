@@ -17,7 +17,7 @@ This Actor uses a pay-per-event pricing model through Apify. Each API request co
 
 ## Quick start
 
-### 1. Install the OpenAI package
+### 1. Install the [OpenAI package](https://www.npmjs.com/package/openai)
 
 ```bash
 npm install openai

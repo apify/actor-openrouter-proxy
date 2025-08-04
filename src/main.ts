@@ -6,6 +6,8 @@ import { Actor } from 'apify';
 import Fastify from 'fastify';
 import type PinoPretty from 'pino-pretty';
 
+import { renderHomepage } from './homepage.js';
+
 await Actor.init();
 
 if (Actor.config.get('metaOrigin') !== 'STANDBY') {
@@ -31,21 +33,22 @@ const server = Fastify({
     },
 });
 
+let homepageContent: string | undefined;
 server.get('/', async (request, reply) => {
     if (request.headers['x-apify-container-server-readiness-probe']) {
         return reply.status(200).send('ok');
     }
-    return reply.status(200).type('text/html').send(`<!DOCTYPE html>
-<html>
-<head>
-    <title>Open Router proxy Actor</title>
-</head>
-<body>
-    <h1>Open Router proxy Actor</h1>
-    <p>This proxy is usable with <a href="https://github.com/openai/openai-node">OpenAI library</a></p>
-    <p>Read more in <a href="https://apify.com/apify/openrouter">Actor description</a></p>
-</body>
-</html>`);
+
+    try {
+        if (!homepageContent) {
+            homepageContent = await renderHomepage();
+        }
+
+        return reply.status(200).type('text/html').send(homepageContent);
+    } catch (error) {
+        request.log.error({ error }, 'Failed to read README file');
+        return reply.status(500).send('Failed to read README file');
+    }
 });
 
 server.register(FastifyProxy, {
