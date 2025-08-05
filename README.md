@@ -29,7 +29,7 @@ npm install openai
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  baseURL: 'https:/openrouter.apify.actor/api/v1',
+  baseURL: 'https://openrouter.apify.actor/api/v1',
   apiKey: 'no-key-required-but-must-not-be-empty', // Any non-empty string works; do NOT use a real API key.
   defaultHeaders: {
     Authorization: `Bearer ${process.env.APIFY_TOKEN}`, // Apify token is loaded automatically in runtime
