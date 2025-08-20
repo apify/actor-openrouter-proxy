@@ -11,7 +11,7 @@ import { renderHomepage } from './homepage.js';
 await Actor.init();
 
 if (Actor.config.get('metaOrigin') !== 'STANDBY') {
-    await Actor.exit('This Actor is intended to run in standby mode only.');
+    await Actor.exit('This Actor is intended to run in standby mode only. Look at the README.md or https://apify.com/apify/openrouter for more information.');
 }
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
