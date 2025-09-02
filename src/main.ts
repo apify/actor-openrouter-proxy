@@ -105,9 +105,8 @@ server.register(FastifyProxy, {
                 return;
             }
 
-            // eslint-disable-next-line prefer-destructuring
-            const cost = data.usage.cost;
-            if (!cost) {
+            const cost = data?.usage?.cost;
+            if (!cost || typeof cost !== 'number') {
                 request.log.error({ data }, 'Cannot read cost from response');
                 return;
             }
