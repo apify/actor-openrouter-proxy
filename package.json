@@ -16,7 +16,7 @@
 	"devDependencies": {
 		"@apify/eslint-config": "^1.0.0",
 		"@apify/tsconfig": "^0.1.1",
-		"@types/marked": "^5.0.2",
+		"@types/marked": "^6.0.0",
 		"@types/node": "^22.15.21",
 		"eslint": "^9.27.0",
 		"eslint-config-prettier": "^10.1.5",
