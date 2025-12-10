@@ -19,6 +19,9 @@ if (!OPENROUTER_API_KEY) {
     await Actor.exit('OPENROUTER_API_KEY environment variable is not set. Please set it to your OpenRouter API key.');
 }
 
+// Initialize dataset for basic metrics logging
+const dataset = await Actor.openDataset();
+
 const server = Fastify({
     logger: {
         transport: {
@@ -87,7 +90,7 @@ server.register(FastifyProxy, {
             }
 
             let jsonString;
-            // Stream must start with 'data:', but it's allowd to send just ":" to keep the connection alive
+            // Stream must start with 'data:', but it's allowed to send it just ":" to keep the connection alive
             const isStream = response.startsWith('data:') || response.startsWith(':');
             if (isStream) {
                 request.log.info('Stream response mode');
@@ -116,6 +119,23 @@ server.register(FastifyProxy, {
             request.log.info({ cost }, `Charging $0.0001 x ${count} times`);
 
             await Actor.charge({ eventName: 'credit-0-0001', count });
+
+            // Log basic metrics to dataset
+            try {
+                await dataset.pushData({
+                    timestamp: new Date().toISOString(),
+                    provider: data?.provider,
+                    model: data?.model,
+                    promptTokens: data?.usage?.prompt_tokens,
+                    completionTokens: data?.usage?.completion_tokens,
+                    totalTokens: data?.usage?.total_tokens,
+                    promptTokensDetails: data?.usage?.prompt_tokens_details,
+                    completionTokensDetails: data?.usage?.prompt_tokens_details,
+                });
+            } catch (error) {
+                // Don't fail the request if dataset logging fails
+                request.log.warn({ error }, 'Failed to log metrics to dataset');
+            }
         },
     },
 });

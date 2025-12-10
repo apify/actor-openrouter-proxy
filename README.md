@@ -72,9 +72,31 @@ for await (const chunk of stream) {
 }
 ```
 
+### 4. Image generation with vision models
+
+OpenRouter supports image generation through models with vision and image generation capabilities. Use the chat completions API with the `modalities` parameter:
+
+```javascript
+const response = await openai.chat.completions.create({
+  model: 'google/gemini-2.5-flash-image', // Vision-capable model
+  messages: [
+    {
+      role: 'user',
+      content: 'Generate an image of a cute baby sea otter',
+    },
+  ],
+  modalities: ['text', 'image'], // Enable image generation
+});
+
+// Access generated image from response
+console.log(response.choices[0].message);
+```
+
+**Note:** OpenRouter doesn't support the traditional `/images/generations` endpoint. Image generation is done through compatible models using the chat completions API. Check available models with image capabilities on [OpenRouter's models page](https://openrouter.ai/models).
+
 ## Available models
 
-This proxy supports all models available through Open Router from providers including:
+This proxy supports all models available through Open Router from providers, including:
 
 - OpenAI
 - Anthropic
